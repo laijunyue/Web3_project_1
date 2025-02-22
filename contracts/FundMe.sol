@@ -19,7 +19,7 @@ contract FundMe {
     AggregatorV3Interface internal dataFeed;//合约类型
 
     //只有owner才能取款
-    address owner;
+    address public owner;
 
     //设置锁定期
     uint256 deploymentTimestamp;   //合约部署时间 时间戳
@@ -30,9 +30,9 @@ contract FundMe {
     bool public getFundSuccess = false;   //记录取款状态
 
     //构造函数：在合约初始化时被调用且之后不会被调用
-    constructor(uint256 _lockTime) {
+    constructor(uint256 _lockTime, address dataFeedAddr) {
         //sepolia testnet
-        dataFeed = AggregatorV3Interface(0x694AA1769357215DE4FAC081bf1f309aDC325306);
+        dataFeed = AggregatorV3Interface(dataFeedAddr);  //sepolia testnet的地址: 0x694AA1769357215DE4FAC081bf1f309aDC325306
         owner = msg.sender;   //msg代表当前交易
         deploymentTimestamp = block.timestamp;   //当前区块的时间戳 constructor调用的时间戳   //block代表当前区块
         lockTime = _lockTime;

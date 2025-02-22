@@ -1,6 +1,7 @@
 require("@nomicfoundation/hardhat-toolbox");
 require("@chainlink/env-enc").config();
 require("./tasks/index");
+require("hardhat-deploy");
 
 const SEPOLIA_URL = process.env.SEPOLIA_URL
 const PRIVATE_KEY = process.env.PRIVATE_KEY
@@ -14,6 +15,7 @@ setGlobalDispatcher(proxyAgent);
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
   solidity: "0.8.28",
+  defaultNetwork: "hardhat",
   networks: {
     sepolia: {
       url: SEPOLIA_URL, //Alchemy, Infura, QuickNode,
@@ -28,6 +30,15 @@ module.exports = {
     apiKey: {
       sepolia: ETHERSCAN_API_KEY
     }
+  },
+
+  namedAccounts: {
+    firstAccount: {  //accounts: [PRIVATE_KEY, PRIVATE_KEY_1]
+      default: 0,   // accounts[0] by default
+    },
+    secondAccount: {
+      default: 1,    // accounts[1] by default
+    },
   },
 
 };
