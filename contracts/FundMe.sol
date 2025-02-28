@@ -16,7 +16,7 @@ contract FundMe {
     //设置投资的最小额度
     uint256 constant MINIMUM_VALUE = 1 * 10**18; //ether -> wei   USD 预言机:一个ETH值多少钱,获取链下的数据
 
-    AggregatorV3Interface internal dataFeed;//合约类型
+    AggregatorV3Interface public dataFeed;//合约类型
 
     //只有owner才能取款
     address public owner;
@@ -29,6 +29,9 @@ contract FundMe {
 
     bool public getFundSuccess = false;   //记录取款状态
 
+    event FundWithdrawByOwner(uint256);
+    event RefundByFunder(address, uint256);
+
     //构造函数：在合约初始化时被调用且之后不会被调用
     constructor(uint256 _lockTime, address dataFeedAddr) {
         //sepolia testnet
@@ -39,7 +42,7 @@ contract FundMe {
     }
 
     function fund() external payable {
-        require(block.timestamp < deploymentTimestamp + lockTime, "Timeout!");  //设置锁定期
+        require(block.timestamp < deploymentTimestamp + lockTime, "Timeout!, window is closed!");  //设置锁定期
         require(convertEthToUsd(msg.value) >= MINIMUM_VALUE, "Send more ETH");  //当msg.value >= MINIMUM_VALUE不满足条件则退回
         funderToAmount[msg.sender] = msg.value;
     }
@@ -92,9 +95,11 @@ contract FundMe {
         require(convertEthToUsd(address(this).balance/*单位:Wei*/) >= TARGET ,"Target is not enough!");  //this指当前合约 .balance指当前合约的存款
         //require(msg.sender == owner, "This function can only be called by owner!");
         // transfer: transfer ETH and revert if tx failed
-        payable(msg.sender).transfer(address(this).balance);
+        uint256 balance = address(this).balance;
+        payable(msg.sender).transfer(balance);
         funderToAmount[msg.sender] = 0;   //取款后不能再退款
         getFundSuccess = true;   //表示已取款，可以继续通证交易
+        emit FundWithdrawByOwner(balance);
 
         // send: transfer ETH and return false if failed or return true
         // bool success = payable(msg.sender).send(address(this).balance);
@@ -119,10 +124,12 @@ contract FundMe {
         //require(block.timestamp >= deploymentTimestamp + lockTime, "It is not the right time yet!");  //设置锁定期
         require(convertEthToUsd(address(this).balance/*单位:Wei*/) < TARGET ,"Target is enough!");
         require(funderToAmount[msg.sender] != 0, "There is no fund for you!");  //投资者是否有投资
+        uint256 balance = funderToAmount[msg.sender];
         bool success;
-        (success, /*func_result*/) = payable(msg.sender).call{value: funderToAmount[msg.sender]}("");   // ("")函数的入参
+        (success, /*func_result*/) = payable(msg.sender).call{value: balance}("");   // ("")函数的入参
         require(success, "Transfer tx failed!");
         funderToAmount[msg.sender] = 0;   //退款后不能再继续退款
+        emit RefundByFunder(msg.sender, balance);
 
     }
 
