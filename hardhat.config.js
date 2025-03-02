@@ -5,6 +5,7 @@ require("hardhat-deploy");
 require("@nomicfoundation/hardhat-ethers");
 require("hardhat-deploy");
 require("hardhat-deploy-ethers");
+require("hardhat-gas-reporter");
 
 const SEPOLIA_URL = process.env.SEPOLIA_URL
 const PRIVATE_KEY = process.env.PRIVATE_KEY
@@ -19,6 +20,12 @@ setGlobalDispatcher(proxyAgent);
 module.exports = {
   solidity: "0.8.28",
   defaultNetwork: "hardhat",
+  mocha: {
+    timeout: 500000,
+  },
+  gasReporter: {
+    enabled: true
+  },
   networks: {
     sepolia: {
       url: SEPOLIA_URL, //Alchemy, Infura, QuickNode,
